@@ -36,14 +36,33 @@ class PlayerSerializer(DynamicFieldsModelSerializer):
 
     class Meta:
         model = Player
-        exclude = ('game', 'time_withdrawn')
+        fields = ('id', 'user', 'position', 'team')
         read_only_fields = (
+            'user',
             'team',
             'position',
-            'time_created',
         )
         depth = 2
 
+    def to_representation(self, obj):
+        data = {
+            'id': obj.id,
+            'user': obj.user.username,
+            'position': obj.position,
+        }
+
+        if 'request' in self.context:
+            try:
+                player = obj.game.get_player(
+                    self.context['request'].user.username
+                )
+            except Player.DoesNotExist:
+                pass
+            else:
+                if player.team == Teams.WEREWOLF.value:
+                    data['team'] = obj.team
+
+        return data
 
 class ResidentSerializer(serializers.ModelSerializer):
     role = RoleSerializer()

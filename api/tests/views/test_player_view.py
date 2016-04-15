@@ -9,7 +9,7 @@ from django.test import Client, RequestFactory, TestCase
 from rest_framework import status
 
 from .. import GameTestHelper
-from ...models.game import Game, Player
+from ...models.game import Game, Player, Teams
 
 class PlayerViewTest(TestCase):
     def setUp(self):
@@ -43,6 +43,114 @@ class PlayerViewTest(TestCase):
         response = client.post('/api/games/999/players/')
 
         self.assertEquals(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_own_player(self):
+        """
+        Test that users should be able to fetch their own player data
+        """
+        game = GameTestHelper.create_game(User.objects.create(username='owner'))
+
+        client = Client()
+        client.force_login(game.owner.user)
+
+        response = client.get(
+            '/api/games/%d/players/%d/' % (game.id, game.owner.id)
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        response_json = response.json()
+
+        self.assertEquals(response_json['id'], game.owner.id)
+        self.assertEquals(response_json['user'], game.owner.user.username)
+
+    def test_get_other_player(self):
+        """
+        Test that users in the same game can fetch other player's data
+        """
+        user = User.objects.create(username='player')
+        game = GameTestHelper.create_game(
+            owner=User.objects.create(username='owner'),
+            players=[user]
+        )
+
+        client = Client()
+        client.force_login(game.owner.user)
+
+        player = game.players.get(user=user)
+
+        response = client.get(
+            '/api/games/%d/players/%d/' % (game.id, player.id)
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        response_json = response.json()
+
+        self.assertEquals(response_json['id'], player.id)
+        self.assertEquals(response_json['user'], user.username)
+
+    def test_get_players(self):
+        """
+        Test that players can fetch a list of their co-players in the game
+        """
+        game = GameTestHelper.create_start_ready_game()
+
+        client = Client()
+        client.force_login(game.owner.user)
+
+        response = client.get('/api/games/%d/players/' % game.id)
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        response_json = response.json()
+
+        player_data = [
+            {
+                'id': player.id,
+                'user': player.user.username,
+                'position': player.position
+            } for player in game.players.all()
+        ]
+
+        self.assertEquals(player_data, response_json)
+
+    def test_get_player_villager(self):
+        """
+        Test that villagers should not be able to see player team data
+        """
+        game = GameTestHelper.create_start_ready_game()
+        game.start()
+
+        villager = game.players.filter(team=Teams.VILLAGER.value).first()
+
+        client = Client()
+        client.force_login(villager.user)
+
+        response = client.get('/api/games/%d/players/' % game.id)
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        response_json = response.json()
+
+        for player_data in response_json:
+            self.assertFalse('team' in player_data)
+
+    def test_get_player_werewolf(self):
+        """
+        Test that werewolves should be able to see player team data
+        """
+        game = GameTestHelper.create_start_ready_game()
+        game.start()
+
+        werewolf = game.players.filter(team=Teams.WEREWOLF.value).first()
+
+        client = Client()
+        client.force_login(werewolf.user)
+
+        response = client.get('/api/games/%d/players/' % game.id)
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        response_json = response.json()
+
+        for player_data in response_json:
+            self.assertTrue('team' in player_data)
 
     @patch('api.models.game.Player.leave_game')
     def test_delete(self, leave):
