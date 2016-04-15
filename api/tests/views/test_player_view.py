@@ -112,6 +112,22 @@ class PlayerViewTest(TestCase):
 
         self.assertEquals(player_data, response_json)
 
+    def test_get_players_other_game(self):
+        """
+        Test that players cannot fetch player data for another game
+        """
+        game = GameTestHelper.create_game(User.objects.create(username='user1'))
+        other_game = GameTestHelper.create_game(
+            User.objects.create(username='user2')
+        )
+
+        client = Client()
+        client.force_login(game.owner.user)
+
+        response = client.get('/api/games/%d/players/' % other_game.id)
+
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
     def test_get_player_villager(self):
         """
         Test that villagers should not be able to see player team data

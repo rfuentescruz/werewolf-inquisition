@@ -2,6 +2,7 @@ from datetime import datetime
 from random import shuffle
 
 from django.contrib.auth.models import User
+from django.http import Http404
 
 from rest_framework import status, viewsets
 from rest_framework.decorators import detail_route
@@ -9,6 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .models.game import Game, Phases, Player, Teams
+from .permissions import IsGameParticipant
 from .serializers import GameSerializer, PlayerSerializer
 
 
@@ -92,21 +94,21 @@ class GameViewSet(viewsets.ModelViewSet):
 
 
 class PlayerViewSet(viewsets.ModelViewSet):
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated, IsGameParticipant, )
     serializer_class = PlayerSerializer
 
     def get_queryset(self):
-        return Player.objects.filter(game=self.kwargs['game_id'])
+        game = self.get_game()
+        return Player.objects.filter(game=game)
+
+    def get_game(self):
+        try:
+            return Game.objects.get(pk=self.kwargs['game_id'])
+        except Game.DoesNotExist:
+            raise Http404
 
     def create(self, request, game_id):
-        try:
-            game = Game.objects.get(pk=game_id)
-        except Game.DoesNotExist:
-            return Response(
-                'Game does not exist',
-                status=status.HTTP_404_NOT_FOUND
-            )
-
+        game = self.get_game()
         player = game.join(request.user)
 
         serializer = self.get_serializer(player)
