@@ -2,6 +2,7 @@ from .models.game import Game, Player, Teams
 from .models.village import Resident, Role, Hut
 
 from rest_framework import serializers
+from rest_framework.fields import SkipField
 
 
 class DynamicFieldsModelSerializer(serializers.ModelSerializer):
@@ -24,6 +25,25 @@ class DynamicFieldsModelSerializer(serializers.ModelSerializer):
             for field_name in existing - allowed:
                 self.fields.pop(field_name)
 
+    def filter_fields(self, instance, fields):
+        return fields
+
+    def to_representation(self, instance):
+        ret = {}
+        fields = self.filter_fields(instance, self._readable_fields)
+
+        for field in fields:
+            try:
+                attribute = field.get_attribute(instance)
+            except SkipField:
+                continue
+
+            if attribute is None:
+                ret[field.field_name] = None
+            else:
+                ret[field.field_name] = field.to_representation(attribute)
+
+        return ret
 
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:
@@ -44,25 +64,24 @@ class PlayerSerializer(DynamicFieldsModelSerializer):
         )
         depth = 2
 
-    def to_representation(self, obj):
-        data = {
-            'id': obj.id,
-            'user': obj.user.username,
-            'position': obj.position,
-        }
-
+    def filter_fields(self, instance, fields):
+        is_werewolf_player = False
         if 'request' in self.context:
             try:
-                player = obj.game.get_player(
+                player = instance.game.get_player(
                     self.context['request'].user.username
                 )
             except Player.DoesNotExist:
                 pass
             else:
                 if player.team == Teams.WEREWOLF.value:
-                    data['team'] = obj.team
+                    is_werewolf_player = True
 
-        return data
+        return [
+            field for field in fields
+            if field.field_name != 'team' or is_werewolf_player
+        ]
+
 
 class ResidentSerializer(serializers.ModelSerializer):
     role = RoleSerializer()
