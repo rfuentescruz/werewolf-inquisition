@@ -346,3 +346,65 @@ class GameTest(TestCase):
 
         game.end()
         self.assertTrue(game.has_ended())
+
+    def test_get_player(self):
+        """
+        Test that players data can be fetched via their usernames
+        """
+        player = User.objects.create(username='player')
+        game = GameTestHelper.create_game(
+            User.objects.create(username='owner'), players=[player]
+        )
+
+        self.assertEquals(game.get_player('player').user, player)
+
+
+    def test_get_player_already_left(self):
+        """
+        Test that player data can be fetched from the game even after leaving
+        """
+        game = GameTestHelper.create_game(
+            User.objects.create(username='owner'),
+            players=[
+                User.objects.create(username='player')
+            ]
+        )
+
+        player = game.get_player('player')
+        player.leave_game()
+        self.assertEquals(game.get_player('player'), player)
+
+    def test_get_non_existent_player(self):
+        """
+        Test that player data can be fetched from the game even after leaving
+        """
+        game = GameTestHelper.create_game(User.objects.create(username='owner'))
+
+        with self.assertRaises(Player.DoesNotExist):
+            game.get_player('player')
+
+    def test_get_next_player(self):
+        """
+        Test that the 'next' player is the player one `position` higher
+        """
+        game = GameTestHelper.create_start_ready_game()
+        game.start()
+
+        first_player = game.players.get(position=1)
+        self.assertEquals(
+            game.get_next_player(first_player),
+            game.players.get(position=2)
+        )
+
+    def test_get_next_player_after_last_player(self):
+        """
+        Test that the 'next' player loops around the back to first player
+        """
+        game = GameTestHelper.create_start_ready_game()
+        game.start()
+
+        last_player = game.players.get(position=game.players.count())
+        self.assertEquals(
+            game.get_next_player(last_player),
+            game.players.get(position=1)
+        )

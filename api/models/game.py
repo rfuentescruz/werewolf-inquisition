@@ -109,6 +109,13 @@ class Game(models.Model):
     def get_player(self, username):
         return self.players.get(user__username=username)
 
+    def get_next_player(self, player):
+        active_players = self.players.filter(time_withdrawn=None)
+        player_position = active_players.aggregate(models.Max('position'))
+        return active_players.get(
+            position=(player.position + 1) % player_position['position__max']
+        )
+
     def end(self):
         self.time_ended = datetime.now()
         self.save()
@@ -255,6 +262,19 @@ class Turn(models.Model):
     )
 
     time_created = models.DateTimeField(auto_now_add=True)
+
+    def end(self):
+        grand_inquisitor = self.game.get_next_player(self.grand_inquisitor)
+        new_turn = self.game.turns.create(
+            number=self.number + 1,
+            grand_inquisitor=grand_inquisitor,
+            current_phase=Phases.DAY.value,
+            current_player=grand_inquisitor
+        )
+        self.game.active_turn = new_turn
+        self.game.save()
+
+        return new_turn
 
 
 class Action(models.Model):
