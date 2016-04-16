@@ -108,7 +108,6 @@ class Game(models.Model):
 
     def get_player(self, username):
         return self.players.get(user__username=username)
-        return player
 
     def end(self):
         self.time_ended = datetime.now()
@@ -229,7 +228,7 @@ class Player(models.Model):
         if self.game.has_ended():
             raise APIException(
                 'Game has already ended',
-                APIExceptionCode.GAME_ALREADY_STARTED,
+                APIExceptionCode.GAME_ALREADY_ENDED,
                 http_code=status.HTTP_400_BAD_REQUEST
             )
 
