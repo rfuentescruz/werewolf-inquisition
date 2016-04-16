@@ -31,6 +31,46 @@ class GameViewTest(TestCase):
         self.assertEquals(game.owner.user, user)
         self.assertEquals(game.players.first().user, user)
 
+    def test_get_game_list(self):
+        """
+        Test that the game list should not contain related model data
+        """
+        game = GameTestHelper.create_start_ready_game()
+
+        client = Client()
+        client.force_login(game.owner.user)
+
+        response = client.get('/api/games/')
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        response_json = response.json()
+
+        for game_data in response_json:
+            # These fields would require lots of JOINs for a game list
+            self.assertNotIn('active_turn', game_data)
+            self.assertNotIn('players', game_data)
+            self.assertNotIn('residents', game_data)
+            self.assertNotIn('residents', game_data)
+
+    def test_get_game(self):
+        """
+        Test that game detail views should include model relationships
+        """
+        game = GameTestHelper.create_start_ready_game()
+
+        client = Client()
+        client.force_login(game.owner.user)
+
+        response = client.get('/api/games/%d/' % game.id)
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        response_json = response.json()
+
+        self.assertIn('active_turn', response_json)
+        self.assertIn('players', response_json)
+        self.assertIn('residents', response_json)
+        self.assertIn('residents', response_json)
+
     def test_update_winner(self):
         """
         Test that you can't actually update the winning team manually

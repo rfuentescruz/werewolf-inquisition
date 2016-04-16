@@ -98,13 +98,12 @@ class HutSerializer(DynamicFieldsModelSerializer):
         read_only_fields = ('position', 'time_eliminated', 'resident', 'votes')
 
 
-class GameSerializer(serializers.ModelSerializer):
+class GameSerializer(DynamicFieldsModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.user.username')
 
     players = PlayerSerializer(
         read_only=True,
-        many=True,
-        fields=('id', 'user', 'position')
+        many=True
     )
     residents = ResidentSerializer(read_only=True, many=True)
     huts = HutSerializer(
@@ -115,7 +114,10 @@ class GameSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Game
-        fields = '__all__'
+        fields = (
+            'id', 'owner', 'players', 'residents', 'huts', 'active_turn',
+            'winning_team', 'time_created', 'time_started', 'time_ended'
+        )
         read_only_fields = (
             'active_turn',
             'winning_team',
@@ -124,3 +126,10 @@ class GameSerializer(serializers.ModelSerializer):
             'time_ended'
         )
         depth = 1
+
+    @classmethod
+    def many_init(cls, *args, **kwargs):
+        kwargs['fields'] = (
+            'id', 'owner', 'time_created', 'time_started', 'time_ended'
+        )
+        return super(GameSerializer, cls).many_init(*args, **kwargs)
