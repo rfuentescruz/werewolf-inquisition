@@ -11,6 +11,7 @@ from rest_framework import status
 from .. import GameTestHelper
 from ...models.game import Game
 
+
 class GameViewTest(TestCase):
     def setUp(self):
         self.request = RequestFactory()
@@ -75,7 +76,9 @@ class GameViewTest(TestCase):
         """
         Test that you can't actually update the winning team manually
         """
-        game = GameTestHelper.create_game(User.objects.create(username='owner'))
+        game = GameTestHelper.create_game(
+            User.objects.create(username='owner')
+        )
 
         user = User.objects.create(username='player')
         client = Client()
@@ -95,7 +98,9 @@ class GameViewTest(TestCase):
         """
         Test that you can't update the game creation time manually
         """
-        game = GameTestHelper.create_game(User.objects.create(username='owner'))
+        game = GameTestHelper.create_game(
+            User.objects.create(username='owner')
+        )
 
         original_creation_time = game.time_created
 
@@ -117,7 +122,9 @@ class GameViewTest(TestCase):
         """
         Test that you can't update the game start time manually
         """
-        game = GameTestHelper.create_game(User.objects.create(username='owner'))
+        game = GameTestHelper.create_game(
+            User.objects.create(username='owner')
+        )
 
         client = Client()
         client.force_login(game.owner.user)
@@ -137,7 +144,9 @@ class GameViewTest(TestCase):
         """
         Test that you can't update the game end time manually
         """
-        game = GameTestHelper.create_game(User.objects.create(username='owner'))
+        game = GameTestHelper.create_game(
+            User.objects.create(username='owner')
+        )
 
         client = Client()
         client.force_login(game.owner.user)
@@ -157,7 +166,9 @@ class GameViewTest(TestCase):
         """
         Test that you can't change the current active turn manually
         """
-        game = GameTestHelper.create_game(User.objects.create(username='owner'))
+        game = GameTestHelper.create_game(
+            User.objects.create(username='owner')
+        )
 
         client = Client()
         client.force_login(game.owner.user)
@@ -178,7 +189,9 @@ class GameViewTest(TestCase):
         """
         Test that players can join a game
         """
-        game = GameTestHelper.create_game(User.objects.create(username='owner'))
+        game = GameTestHelper.create_game(
+            User.objects.create(username='owner')
+        )
 
         user = User.objects.create(username='player')
         client = Client()
@@ -194,7 +207,9 @@ class GameViewTest(TestCase):
         """
         Test that only players who have already joined the game can leave
         """
-        game = GameTestHelper.create_game(User.objects.create(username='owner'))
+        game = GameTestHelper.create_game(
+            User.objects.create(username='owner')
+        )
 
         user = User.objects.create(username='player')
         client = Client()
@@ -206,7 +221,7 @@ class GameViewTest(TestCase):
         self.assertFalse(leave.called)
 
     @patch('api.models.game.Player.leave_game')
-    def test_leave_non_participant(self, leave):
+    def test_leave(self, leave):
         """
         Test that players can leave a game
         """
@@ -229,7 +244,9 @@ class GameViewTest(TestCase):
         """
         Test that games can only be started by its owner
         """
-        game = GameTestHelper.create_game(User.objects.create(username='owner'))
+        game = GameTestHelper.create_game(
+            User.objects.create(username='owner')
+        )
 
         user = User.objects.create(username='player')
         client = Client()
@@ -239,7 +256,6 @@ class GameViewTest(TestCase):
 
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertFalse(start.called)
-
 
     @patch('api.models.game.Game.start')
     def test_start(self, start):
@@ -262,7 +278,9 @@ class GameViewTest(TestCase):
         """
         Test that games can only be ended by its owner
         """
-        game = GameTestHelper.create_game(User.objects.create(username='owner'))
+        game = GameTestHelper.create_game(
+            User.objects.create(username='owner')
+        )
 
         user = User.objects.create(username='player')
         client = Client()
@@ -274,7 +292,7 @@ class GameViewTest(TestCase):
         self.assertFalse(end.called)
 
     @patch('api.models.game.Game.end')
-    def test_end_non_owner(self, end):
+    def test_end_already_started(self, end):
         """
         Test that games cannot be deleted once started
         """
@@ -334,4 +352,3 @@ class GameViewSetAuthTest(TestCase):
                 status.HTTP_403_FORBIDDEN,
                 '%s did not return 403' % uri
             )
-

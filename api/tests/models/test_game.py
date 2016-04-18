@@ -1,5 +1,3 @@
-import math
-
 from datetime import datetime
 
 from django.contrib.auth.models import User
@@ -10,7 +8,7 @@ from .. import GameTestHelper
 from ...exceptions import APIException, APIExceptionCode
 from ...models.game import Game, Phases, Player, Teams
 # Need this for DB setup, or else Django can't resolve relations and craps out
-from ...models.village import Resident
+from ...models.village import Resident  # NOQA
 
 
 class GameTest(TestCase):
@@ -23,7 +21,9 @@ class GameTest(TestCase):
         for i in range(Game.MAX_PLAYERS):
             players.append(User.objects.create(username='user%d' % i))
 
-        game = GameTestHelper.create_game(owner=players[0], players=players[1:])
+        game = GameTestHelper.create_game(
+            owner=players[0], players=players[1:]
+        )
 
         with self.assertRaises(APIException) as error:
             game.join(User.objects.create(username='other_user'))
@@ -67,7 +67,9 @@ class GameTest(TestCase):
         """
         Test that users can successfully join games
         """
-        game = GameTestHelper.create_game(User.objects.create(username='owner'))
+        game = GameTestHelper.create_game(
+            User.objects.create(username='owner')
+        )
 
         user = User.objects.create(username='player')
         game.join(user)
@@ -79,7 +81,9 @@ class GameTest(TestCase):
         """
         Test that users cannot join the same game twice (unless they left)
         """
-        game = GameTestHelper.create_game(User.objects.create(username='owner'))
+        game = GameTestHelper.create_game(
+            User.objects.create(username='owner')
+        )
 
         user = User.objects.create(username='player')
         game.join(user)
@@ -96,7 +100,9 @@ class GameTest(TestCase):
         """
         Test that users can rejoin games that they have left
         """
-        game = GameTestHelper.create_game(User.objects.create(username='owner'))
+        game = GameTestHelper.create_game(
+            User.objects.create(username='owner')
+        )
 
         user = User.objects.create(username='player')
 
@@ -155,14 +161,16 @@ class GameTest(TestCase):
 
     def test_rejoin_game_max_players(self):
         """
-        Test that users cannot rejoin games if it already has max no. of players
+        Test that users cannot rejoin games if it has max no. of players
         """
         players = []
 
         for i in range(Game.MAX_PLAYERS):
             players.append(User.objects.create(username='user%d' % i))
 
-        game = GameTestHelper.create_game(owner=players[0], players=players[1:])
+        game = GameTestHelper.create_game(
+            owner=players[0], players=players[1:]
+        )
 
         leaver = game.players.last()
         leaver.leave_game()
@@ -264,7 +272,6 @@ class GameTest(TestCase):
         for i in range(Game.MAX_PLAYERS):
             players.append(User.objects.create(username='user%d' % i))
 
-
         for size in range(Game.MIN_PLAYERS, Game.MAX_PLAYERS):
             game = GameTestHelper.create_game(
                 owner=players[0],
@@ -304,13 +311,13 @@ class GameTest(TestCase):
     def test_get_team_allocation(self):
         expected_team_allocations = [
             # (size, (villager, werewolf))
-            ( 3, (2, 1)),
-            ( 4, (3, 1)),
-            ( 5, (3, 2)),
-            ( 6, (4, 2)),
-            ( 7, (4, 3)),
-            ( 8, (5, 3)),
-            ( 9, (5, 4)),
+            (3, (2, 1)),
+            (4, (3, 1)),
+            (5, (3, 2)),
+            (6, (4, 2)),
+            (7, (4, 3)),
+            (8, (5, 3)),
+            (9, (5, 4)),
             (10, (6, 4)),
             (11, (6, 5)),
             (12, (7, 5)),
@@ -358,7 +365,6 @@ class GameTest(TestCase):
 
         self.assertEquals(game.get_player('player').user, player)
 
-
     def test_get_player_already_left(self):
         """
         Test that player data can be fetched from the game even after leaving
@@ -378,7 +384,9 @@ class GameTest(TestCase):
         """
         Test that player data can be fetched from the game even after leaving
         """
-        game = GameTestHelper.create_game(User.objects.create(username='owner'))
+        game = GameTestHelper.create_game(
+            User.objects.create(username='owner')
+        )
 
         with self.assertRaises(Player.DoesNotExist):
             game.get_player('player')

@@ -1,0 +1,7 @@
+nose
+nose-cov
+nosexcover
+
+mock
+
+flake8

@@ -1,6 +1,3 @@
-import json
-
-from datetime import datetime
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
@@ -9,7 +6,8 @@ from django.test import Client, RequestFactory, TestCase
 from rest_framework import status
 
 from .. import GameTestHelper
-from ...models.game import Game, Player, Teams
+from ...models.game import Teams
+
 
 class PlayerViewTest(TestCase):
     def setUp(self):
@@ -19,7 +17,9 @@ class PlayerViewTest(TestCase):
         """
         Test that players can be POST'ed and join the game
         """
-        game = GameTestHelper.create_game(User.objects.create(username='owner'))
+        game = GameTestHelper.create_game(
+            User.objects.create(username='owner')
+        )
 
         user = User.objects.create(username='player')
 
@@ -48,7 +48,9 @@ class PlayerViewTest(TestCase):
         """
         Test that users should be able to fetch their own player data
         """
-        game = GameTestHelper.create_game(User.objects.create(username='owner'))
+        game = GameTestHelper.create_game(
+            User.objects.create(username='owner')
+        )
 
         client = Client()
         client.force_login(game.owner.user)
@@ -116,7 +118,9 @@ class PlayerViewTest(TestCase):
         """
         Test that players cannot fetch player data for another game
         """
-        game = GameTestHelper.create_game(User.objects.create(username='user1'))
+        game = GameTestHelper.create_game(
+            User.objects.create(username='user1')
+        )
         other_game = GameTestHelper.create_game(
             User.objects.create(username='user2')
         )
@@ -239,11 +243,12 @@ class PlayerViewSetAuthTest(TestCase):
         self.game = GameTestHelper.create_game(
             User.objects.create(username='owner')
         )
+        self.owner = self.game.owner
 
     def get_test_data(self):
         return {
             ('/api/games/%d/players/' % self.game.id): {},
-            ('/api/games/%d/players/%d/' % (self.game.id, self.game.owner.id)): {},
+            ('/api/games/%d/players/%d/' % (self.game.id, self.owner.id)): {},
         }
 
     def test_make_unauthenticated_requests(self):
@@ -260,4 +265,3 @@ class PlayerViewSetAuthTest(TestCase):
                 status.HTTP_403_FORBIDDEN,
                 '%s did not return 403' % uri
             )
-

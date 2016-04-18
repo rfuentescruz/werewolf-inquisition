@@ -5,6 +5,7 @@ from django.db import models
 from .game import Game, Teams
 from .choice_enum import ChoiceEnum
 
+
 class Roles(ChoiceEnum, Enum):
     APPRENTICE_SEER = 'apprentice_seer'
     BODYGUARD = 'bodyguard'
@@ -21,7 +22,6 @@ class Roles(ChoiceEnum, Enum):
     WEREWOLF = 'werewolf'
     WITCH = 'witch'
     WOLF_CUB = 'wolf_cub'
-
 
     CUSTOM_NAMES = {
         'APPRENTICE_SEER': 'Apprentice Seer',

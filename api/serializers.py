@@ -45,6 +45,7 @@ class DynamicFieldsModelSerializer(serializers.ModelSerializer):
 
         return ret
 
+
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Role
@@ -85,6 +86,7 @@ class PlayerSerializer(DynamicFieldsModelSerializer):
 
 class ResidentSerializer(serializers.ModelSerializer):
     role = RoleSerializer()
+
     class Meta:
         model = Resident
         fields = ('id', 'role', )

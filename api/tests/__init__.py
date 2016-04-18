@@ -1,7 +1,9 @@
 from django.contrib.auth.models import User
 
 from ..models.game import Game, Player
-from ..models.village import Resident
+# Need this for DB setup, or else Django can't resolve relations and craps out
+from ..models.village import Resident  # NOQA
+
 
 class GameTestHelper(object):
     @classmethod

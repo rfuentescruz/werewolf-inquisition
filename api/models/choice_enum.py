@@ -1,6 +1,3 @@
-from enum import Enum
-
-
 class ChoiceEnum(object):
     CUSTOM_NAMES = {}
 

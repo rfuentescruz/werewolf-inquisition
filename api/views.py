@@ -1,7 +1,3 @@
-from datetime import datetime
-from random import shuffle
-
-from django.contrib.auth.models import User
 from django.http import Http404
 
 from rest_framework import status, viewsets
@@ -9,7 +5,7 @@ from rest_framework.decorators import detail_route
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from .models.game import Game, Phases, Player, Teams
+from .models.game import Game, Player, Teams
 from .permissions import IsGameParticipant
 from .serializers import GameSerializer, PlayerSerializer
 
@@ -18,7 +14,6 @@ class GameViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated, )
     serializer_class = GameSerializer
     queryset = Game.objects.select_related('owner')
-
 
     def create(self, request):
         game = Game.objects.create()

@@ -11,6 +11,7 @@ from rest_framework import status
 from .choice_enum import ChoiceEnum
 from ..exceptions import APIException, APIExceptionCode
 
+
 class Teams(ChoiceEnum, Enum):
     VILLAGER = 'villager'
     WEREWOLF = 'werewolf'
@@ -183,10 +184,11 @@ class Game(models.Model):
             Teams.VILLAGER.value: math.floor(player_count / 2) + 1
         }
 
+
 class PlayerManager(models.Manager):
     def get_queryset(self):
-        # Eagerly-load `User` data since we won't be using the `Player` model by
-        # itself anyways
+        # Eagerly-load `User` data since we won't be using the `Player` model
+        # by itself anyways
         return super(PlayerManager, self).get_queryset().select_related('user')
 
 
