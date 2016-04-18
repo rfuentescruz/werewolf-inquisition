@@ -1,7 +1,6 @@
 import math
 
 from datetime import datetime
-from enum import Enum
 from random import shuffle
 
 from django.contrib.auth.models import User
@@ -12,12 +11,12 @@ from .choice_enum import ChoiceEnum
 from ..exceptions import APIException, APIExceptionCode
 
 
-class Teams(ChoiceEnum, Enum):
+class Teams(ChoiceEnum):
     VILLAGER = 'villager'
     WEREWOLF = 'werewolf'
 
 
-class Phases(ChoiceEnum, Enum):
+class Phases(ChoiceEnum):
     INITIAL = 0
     DAY = 1
     VOTING = 2

@@ -1,12 +1,10 @@
-from enum import Enum
-
 from django.db import models
 
 from .game import Game, Teams
 from .choice_enum import ChoiceEnum
 
 
-class Roles(ChoiceEnum, Enum):
+class Roles(ChoiceEnum):
     APPRENTICE_SEER = 'apprentice_seer'
     BODYGUARD = 'bodyguard'
     CURSED = 'cursed'
