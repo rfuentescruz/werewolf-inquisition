@@ -27,11 +27,6 @@ class Game(models.Model):
     MIN_PLAYERS = 3
     MAX_PLAYERS = 12
 
-    active_turn = models.ForeignKey(
-        'Turn',
-        blank=True, null=True, default=None, on_delete=models.SET_NULL,
-        related_name='+'
-    )
     winning_team = models.CharField(
         max_length=10, choices=Teams.choices(),
         blank=True, null=True, default=None
@@ -44,6 +39,12 @@ class Game(models.Model):
     @property
     def owner(self):
         return self.players.get(is_owner=True)
+
+    @property
+    def active_turn(self):
+        # Were using `filter` and `first` instead of `get` since there are
+        # games without any active turns yet (e.g. hasn't started)
+        return self.turns.filter(is_active=True).first()
 
     def has_started(self):
         if not self.time_started:
@@ -161,14 +162,13 @@ class Game(models.Model):
 
         self.time_started = datetime.now()
 
-        turn = self.turns.create(
+        self.turns.create(
             number=1,
             current_phase=Phases.INITIAL.value,
             grand_inquisitor=grand_inquisitor,
             current_player=grand_inquisitor
         )
 
-        self.active_turn = turn
         self.save()
 
     @staticmethod
@@ -246,6 +246,8 @@ class Turn(models.Model):
         Game, on_delete=models.DO_NOTHING, related_name='turns'
     )
     number = models.IntegerField()
+    is_active = models.BooleanField(default=True)
+
     grand_inquisitor = models.ForeignKey(
         Player, on_delete=models.DO_NOTHING, related_name='+'
     )
@@ -263,14 +265,16 @@ class Turn(models.Model):
 
     def end(self):
         grand_inquisitor = self.game.get_next_player(self.grand_inquisitor)
+
+        self.is_active = False
+        self.save()
+
         new_turn = self.game.turns.create(
             number=self.number + 1,
             grand_inquisitor=grand_inquisitor,
             current_phase=Phases.DAY.value,
             current_player=grand_inquisitor
         )
-        self.game.active_turn = new_turn
-        self.game.save()
 
         return new_turn
 
