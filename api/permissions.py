@@ -1,6 +1,6 @@
 from rest_framework.permissions import BasePermission
 
-from .models.game import Player
+from .models import Player
 
 
 class IsGameParticipant(BasePermission):

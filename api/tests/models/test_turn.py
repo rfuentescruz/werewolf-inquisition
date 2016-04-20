@@ -2,7 +2,7 @@ from django.test import TestCase
 
 from .. import GameTestHelper
 
-from ...models.game import Phases
+from ...models import Phases
 
 
 class PlayerTest(TestCase):

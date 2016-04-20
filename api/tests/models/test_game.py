@@ -6,9 +6,7 @@ from django.test import TestCase
 from .. import GameTestHelper
 
 from ...exceptions import APIException, APIExceptionCode
-from ...models.game import Game, Phases, Player, Teams
-# Need this for DB setup, or else Django can't resolve relations and craps out
-from ...models.village import Resident  # NOQA
+from ...models import Game, Phases, Player, Teams
 
 
 class GameTest(TestCase):

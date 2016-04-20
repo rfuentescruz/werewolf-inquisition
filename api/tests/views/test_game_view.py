@@ -9,7 +9,7 @@ from django.test import Client, RequestFactory, TestCase
 from rest_framework import status
 
 from .. import GameTestHelper
-from ...models.game import Game
+from ...models import Game
 
 
 class GameViewTest(TestCase):
@@ -184,7 +184,7 @@ class GameViewTest(TestCase):
         game.refresh_from_db()
         self.assertIsNone(game.active_turn)
 
-    @patch('api.models.game.Game.join')
+    @patch('api.models.Game.join')
     def test_join(self, join):
         """
         Test that players can join a game
@@ -202,7 +202,7 @@ class GameViewTest(TestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertTrue(join.called_with(user))
 
-    @patch('api.models.game.Player.leave_game')
+    @patch('api.models.Player.leave_game')
     def test_leave_non_participant(self, leave):
         """
         Test that only players who have already joined the game can leave
@@ -220,7 +220,7 @@ class GameViewTest(TestCase):
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertFalse(leave.called)
 
-    @patch('api.models.game.Player.leave_game')
+    @patch('api.models.Player.leave_game')
     def test_leave(self, leave):
         """
         Test that players can leave a game
@@ -239,7 +239,7 @@ class GameViewTest(TestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertTrue(leave.called)
 
-    @patch('api.models.game.Game.start')
+    @patch('api.models.Game.start')
     def test_start_non_owner(self, start):
         """
         Test that games can only be started by its owner
@@ -257,7 +257,7 @@ class GameViewTest(TestCase):
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertFalse(start.called)
 
-    @patch('api.models.game.Game.start')
+    @patch('api.models.Game.start')
     def test_start(self, start):
         """
         Test that games can be started by its owner successfully
@@ -273,7 +273,7 @@ class GameViewTest(TestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertTrue(start.called)
 
-    @patch('api.models.game.Game.end')
+    @patch('api.models.Game.end')
     def test_end_non_owner(self, end):
         """
         Test that games can only be ended by its owner
@@ -291,7 +291,7 @@ class GameViewTest(TestCase):
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertFalse(end.called)
 
-    @patch('api.models.game.Game.end')
+    @patch('api.models.Game.end')
     def test_end_already_started(self, end):
         """
         Test that games cannot be deleted once started
@@ -307,7 +307,7 @@ class GameViewTest(TestCase):
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertFalse(end.called)
 
-    @patch('api.models.game.Game.end')
+    @patch('api.models.Game.end')
     def test_end(self, end):
         """
         Test that games can be ended by its owner successfully

@@ -5,7 +5,7 @@ from rest_framework.decorators import detail_route
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from .models.game import Game, Player, Teams
+from .models import Game, Player, Teams
 from .permissions import IsGameParticipant
 from .serializers import GameSerializer, PlayerSerializer
 

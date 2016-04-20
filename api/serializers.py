@@ -1,5 +1,4 @@
-from .models.game import Game, Player, Teams
-from .models.village import Resident, Role, Hut
+from .models import Game, Hut, Player, Resident, Role, Teams
 
 from rest_framework import serializers
 from rest_framework.fields import SkipField

@@ -3,24 +3,15 @@ import math
 from datetime import datetime
 from random import shuffle
 
-from django.contrib.auth.models import User
 from django.db import models
+from django.core.exceptions import ObjectDoesNotExist
+
 from rest_framework import status
 
-from .choice_enum import ChoiceEnum
 from ..exceptions import APIException, APIExceptionCode
 
-
-class Teams(ChoiceEnum):
-    VILLAGER = 'villager'
-    WEREWOLF = 'werewolf'
-
-
-class Phases(ChoiceEnum):
-    INITIAL = 0
-    DAY = 1
-    VOTING = 2
-    NIGHT = 3
+from .team import Teams
+from .phase import Phases
 
 
 class Game(models.Model):
@@ -74,7 +65,7 @@ class Game(models.Model):
         player = None
         try:
             player = self.get_player(username=user.username)
-        except Player.DoesNotExist:
+        except ObjectDoesNotExist:
             pass
         else:
             if not player.has_left():
@@ -177,149 +168,3 @@ class Game(models.Model):
             Teams.WEREWOLF.value: math.ceil(player_count / 2) - 1,
             Teams.VILLAGER.value: math.floor(player_count / 2) + 1
         }
-
-
-class PlayerManager(models.Manager):
-    def get_queryset(self):
-        # Eagerly-load `User` data since we won't be using the `Player` model
-        # by itself anyways
-        return super(PlayerManager, self).get_queryset().select_related('user')
-
-
-class Player(models.Model):
-    # Override default manager
-    objects = PlayerManager()
-
-    game = models.ForeignKey(
-        Game, on_delete=models.DO_NOTHING, related_name='players'
-    )
-
-    is_owner = models.BooleanField(default=False)
-
-    team = models.CharField(
-        max_length=10,
-        choices=Teams.choices(),
-        default=Teams.VILLAGER.value
-    )
-    position = models.IntegerField(default=1)
-
-    user = models.ForeignKey(
-        User, on_delete=models.DO_NOTHING, related_name='+'
-    )
-
-    time_created = models.DateTimeField(auto_now_add=True)
-    time_withdrawn = models.DateTimeField(blank=True, null=True, default=None)
-
-    def has_left(self):
-        if not self.time_withdrawn:
-            return False
-        return True
-
-    def leave_game(self):
-        if self.has_left():
-            raise APIException(
-                'Player already left',
-                APIExceptionCode.PLAYER_ALREADY_LEFT,
-                http_code=status.HTTP_400_BAD_REQUEST
-            )
-
-        if self.game.has_started():
-            raise APIException(
-                'Unable to leave game. Game has already started',
-                APIExceptionCode.GAME_ALREADY_STARTED,
-                http_code=status.HTTP_400_BAD_REQUEST
-            )
-
-        if self.game.has_ended():
-            raise APIException(
-                'Game has already ended',
-                APIExceptionCode.GAME_ALREADY_ENDED,
-                http_code=status.HTTP_400_BAD_REQUEST
-            )
-
-        self.time_withdrawn = datetime.now()
-        self.save()
-
-
-class Turn(models.Model):
-    game = models.ForeignKey(
-        Game, on_delete=models.DO_NOTHING, related_name='turns'
-    )
-    number = models.IntegerField()
-    is_active = models.BooleanField(default=True)
-
-    grand_inquisitor = models.ForeignKey(
-        Player, on_delete=models.DO_NOTHING, related_name='+'
-    )
-    current_phase = models.IntegerField(
-        choices=Phases.choices(),
-        blank=True, null=True, default=Phases.DAY.value
-    )
-    current_player = models.ForeignKey(
-        Player,
-        blank=True, null=True, default=None, on_delete=models.SET_NULL,
-        related_name='+'
-    )
-
-    time_created = models.DateTimeField(auto_now_add=True)
-
-    def end(self):
-        grand_inquisitor = self.game.get_next_player(self.grand_inquisitor)
-
-        self.is_active = False
-        self.save()
-
-        new_turn = self.game.turns.create(
-            number=self.number + 1,
-            grand_inquisitor=grand_inquisitor,
-            current_phase=Phases.DAY.value,
-            current_player=grand_inquisitor
-        )
-
-        return new_turn
-
-
-class Action(models.Model):
-    turn = models.ForeignKey(
-        Turn, on_delete=models.DO_NOTHING, related_name='actions'
-    )
-    player = models.ForeignKey(
-        Player, on_delete=models.DO_NOTHING, related_name='actions'
-    )
-    resident = models.ForeignKey(
-        'Resident',
-        on_delete=models.DO_NOTHING,
-        blank=True,
-        null=True,
-        default=None,
-        related_name='+'
-    )
-
-    time_created = models.DateTimeField(auto_now_add=True)
-
-
-class Vote(models.Model):
-    turn = models.ForeignKey(
-        Turn, on_delete=models.DO_NOTHING, related_name='votes'
-    )
-    player = models.ForeignKey(
-        Player, on_delete=models.DO_NOTHING, related_name='votes'
-    )
-    hut = models.ForeignKey(
-        'Hut', on_delete=models.DO_NOTHING, related_name='votes'
-    )
-
-    time_created = models.DateTimeField(auto_now_add=True)
-    time_removed = models.DateTimeField(null=True, blank=True, default=None)
-
-
-class Inquisition(models.Model):
-    turn = models.ForeignKey(
-        Turn, on_delete=models.DO_NOTHING, related_name='inquisitions'
-    )
-    resident = models.ForeignKey(
-        'Resident', on_delete=models.DO_NOTHING, related_name='+'
-    )
-    position = models.IntegerField()
-
-    time_created = models.DateTimeField(auto_now_add=True)

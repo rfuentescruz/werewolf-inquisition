@@ -6,7 +6,7 @@ from django.test import Client, RequestFactory, TestCase
 from rest_framework import status
 
 from .. import GameTestHelper
-from ...models.game import Teams
+from ...models import Teams
 
 
 class PlayerViewTest(TestCase):
@@ -172,7 +172,7 @@ class PlayerViewTest(TestCase):
         for player_data in response_json:
             self.assertTrue('team' in player_data)
 
-    @patch('api.models.game.Player.leave_game')
+    @patch('api.models.Player.leave_game')
     def test_delete(self, leave):
         """
         Test that DELETE'ing players will cause them to leave their game
@@ -195,7 +195,7 @@ class PlayerViewTest(TestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertTrue(leave.called)
 
-    @patch('api.models.game.Player.leave_game')
+    @patch('api.models.Player.leave_game')
     def test_delete_other_player(self, leave):
         """
         Test that players can leave a game
@@ -216,7 +216,7 @@ class PlayerViewTest(TestCase):
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertFalse(leave.called)
 
-    @patch('api.models.game.Player.leave_game')
+    @patch('api.models.Player.leave_game')
     def test_delete_player_non_existent_game(self, leave):
         """
         Test that players can leave a game
