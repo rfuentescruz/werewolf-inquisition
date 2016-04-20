@@ -27,15 +27,6 @@ class Game(models.Model):
     MIN_PLAYERS = 3
     MAX_PLAYERS = 12
 
-    owner = models.ForeignKey(
-        'Player',
-        on_delete=models.DO_NOTHING,
-        related_name='+',
-        # Chicken-and-egg, `Player` models are defined by `Game` models and we
-        # need the game first to know the owning player.
-        blank=True, null=True, default=None
-    )
-
     active_turn = models.ForeignKey(
         'Turn',
         blank=True, null=True, default=None, on_delete=models.SET_NULL,
@@ -49,6 +40,10 @@ class Game(models.Model):
     time_created = models.DateTimeField(auto_now_add=True)
     time_started = models.DateTimeField(blank=True, null=True, default=None)
     time_ended = models.DateTimeField(blank=True, null=True, default=None)
+
+    @property
+    def owner(self):
+        return self.players.get(is_owner=True)
 
     def has_started(self):
         if not self.time_started:
@@ -198,6 +193,8 @@ class Player(models.Model):
     game = models.ForeignKey(
         Game, on_delete=models.DO_NOTHING, related_name='players'
     )
+
+    is_owner = models.BooleanField(default=False)
 
     team = models.CharField(
         max_length=10,

@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 
-from ..models.game import Game, Player
+from ..models.game import Game
 # Need this for DB setup, or else Django can't resolve relations and craps out
 from ..models.village import Resident  # NOQA
 
@@ -9,15 +9,11 @@ class GameTestHelper(object):
     @classmethod
     def create_game(cls, owner, players=None):
         game = Game.objects.create()
-        player = Player(
-            game=game,
+        game.players.create(
             user=owner,
+            is_owner=True,
             position=1
         )
-        player.save()
-
-        game.owner = player
-        game.save()
 
         if players and len(players):
             for user in players:

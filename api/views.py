@@ -13,17 +13,16 @@ from .serializers import GameSerializer, PlayerSerializer
 class GameViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated, )
     serializer_class = GameSerializer
-    queryset = Game.objects.select_related('owner')
+    queryset = Game.objects.all()
 
     def create(self, request):
         game = Game.objects.create()
-        player = game.players.create(
+        game.players.create(
             user=request.user,
             position=1,
+            is_owner=True,
             team=Teams.VILLAGER.value
         )
-        game.owner = player
-        game.save()
 
         serializer = self.get_serializer(game)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
