@@ -21,10 +21,11 @@ class Roles(ChoiceEnum):
     WITCH = 'witch'
     WOLF_CUB = 'wolf_cub'
 
-    CUSTOM_NAMES = {
-        'APPRENTICE_SEER': 'Apprentice Seer',
-        'WOLF_CUB': 'Wolf Cub'
-    }
+    @classmethod
+    def get_choice_label(cls, name):
+        return ' '.join(
+            [s.capitalize() for s in name.split('_')]
+        )
 
 
 class Role(models.Model):

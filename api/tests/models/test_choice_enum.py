@@ -40,7 +40,7 @@ class ChoiceEnumTest(TestCase):
 
         self.assertEquals(
             Foo.choices(),
-            [('BAR', 'bar'), ('BAZ', 'baz')]
+            [('bar', 'Bar'), ('baz', 'Baz')]
         )
 
     def test_choice_enum_choices_custom_names(self):
@@ -55,11 +55,12 @@ class ChoiceEnumTest(TestCase):
             def get_choice_label(cls, name):
                 labels = {'BAR': 'QUX'}
 
-                return labels[name] if name in labels else name
+                label = labels[name] if name in labels else name
+                return label.capitalize()
 
         self.assertEquals(
             Foo.choices(),
-            [('QUX', 'bar'), ('BAZ', 'baz')]
+            [('bar', 'Qux'), ('baz', 'Baz')]
         )
 
     def test_choice_enum_custom_names_only_for_choices(self):
@@ -80,3 +81,6 @@ class ChoiceEnumTest(TestCase):
 
         with self.assertRaises(AttributeError):
             self.assertEquals(Foo.QUX.value, 'bar')
+
+        with self.assertRaises(AttributeError):
+            self.assertEquals(Foo.Qux.value, 'bar')

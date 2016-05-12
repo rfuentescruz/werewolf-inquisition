@@ -6,7 +6,7 @@ class ChoiceEnum(Enum):
     def choices(cls):
         choices = []
         for item in list(cls):
-            choices.append((cls.get_choice_label(item.name), item.value))
+            choices.append((item.value, cls.get_choice_label(item.name)))
 
         return choices
 
@@ -15,4 +15,4 @@ class ChoiceEnum(Enum):
         """
         Override this method to provide a different label to an Enum vale
         """
-        return name
+        return name.capitalize()
