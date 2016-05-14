@@ -8,12 +8,12 @@ from .action import Action
 from .vote import Vote
 from .inquisition import Inquisition
 
-from .role import Role
+from .role import Role, Roles
 from .resident import Resident
 from .hut import Hut
 
 __all__ = [
     Teams, Phases,
     Game, Player, Turn, Action, Vote, Inquisition,
-    Role, Resident, Hut,
+    Role, Roles, Resident, Hut,
 ]

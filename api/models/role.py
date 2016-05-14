@@ -36,3 +36,9 @@ class Role(models.Model):
     )
 
     team = models.CharField(max_length=10, choices=Teams.choices())
+
+    max_count = models.PositiveSmallIntegerField(
+        null=True, blank=True, default=1
+    )
+
+    value = models.SmallIntegerField(null=False, default=0)
