@@ -12,11 +12,13 @@ from ..exceptions import APIException, APIExceptionCode
 
 from .team import Teams
 from .phase import Phases
+from .role import Role
 
 
 class Game(models.Model):
     MIN_PLAYERS = 3
     MAX_PLAYERS = 12
+    RESIDENT_COUNT = 12
 
     winning_team = models.CharField(
         max_length=10, choices=Teams.choices(),
@@ -132,6 +134,30 @@ class Game(models.Model):
                 http_code=status.HTTP_400_BAD_REQUEST
             )
 
+        if self.residents.count() != Game.RESIDENT_COUNT:
+            raise APIException(
+                'Game does not have the correct number of residents',
+                APIExceptionCode.GAME_INCORRECT_RESIDENT_COUNT,
+                http_code=status.HTTP_400_BAD_REQUEST
+            )
+
+        self.initialize_huts()
+        grand_inquisitor = self.initialize_players(players)
+
+        self.turns.create(
+            number=1,
+            current_phase=Phases.INITIAL.value,
+            grand_inquisitor=grand_inquisitor,
+            current_player=grand_inquisitor
+        )
+
+        self.time_started = datetime.now()
+        self.save()
+
+    def initialize_players(self, players=None):
+        if players is None:
+            players = list(self.players.filter(time_withdrawn=None).all())
+
         shuffle(players)
 
         team_allocation = self.get_team_allocation(len(players))
@@ -151,16 +177,36 @@ class Game(models.Model):
 
             player.save()
 
-        self.time_started = datetime.now()
+        return grand_inquisitor
 
-        self.turns.create(
-            number=1,
-            current_phase=Phases.INITIAL.value,
-            grand_inquisitor=grand_inquisitor,
-            current_player=grand_inquisitor
+    def initialize_huts(self):
+        hut_numbers = list(range(1, Game.RESIDENT_COUNT + 1))
+        shuffle(hut_numbers)
+
+        for hut in self.huts.all():
+            hut.position = hut_numbers.pop()
+            hut.save()
+
+    def add_resident(self, role_data):
+        role = Role.objects.get(role=role_data.value)
+
+        role_count = self.residents.filter(role=role).count()
+
+        if role.max_count is not None and role_count >= role.max_count:
+            raise APIException(
+                'You may only have up to %s %s residents' % (
+                    role.max_count, role.name
+                ),
+                APIExceptionCode.GAME_MAX_RESIDENT_FOR_ROLE_REACHED,
+                http_code=status.HTTP_400_BAD_REQUEST
+            )
+
+        resident = self.residents.create(role=role)
+        self.huts.create(
+            position=0,
+            resident=resident
         )
-
-        self.save()
+        return resident
 
     @staticmethod
     def get_team_allocation(player_count):

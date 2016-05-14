@@ -6,7 +6,7 @@ from django.test import TestCase
 from .. import GameTestHelper
 
 from ...exceptions import APIException, APIExceptionCode
-from ...models import Game, Phases, Player, Teams
+from ...models import Game, Phases, Player, Roles, Teams
 
 
 class GameTest(TestCase):
@@ -240,6 +240,42 @@ class GameTest(TestCase):
             APIExceptionCode.GAME_ALREADY_ENDED
         )
 
+    def test_start_with_incorrect_resident_count(self):
+        """
+        Test that games cannot start without enough residents
+        """
+        game = GameTestHelper.create_game(
+            owner=User.objects.create(username='user')
+        )
+
+        for i in range(Game.MIN_PLAYERS):
+            game.join(User.objects.create(username='user_%d' % i))
+
+        with self.assertRaises(APIException) as error:
+            game.start()
+
+        self.assertEquals(
+            error.exception.code,
+            APIExceptionCode.GAME_INCORRECT_RESIDENT_COUNT
+        )
+
+    def test_add_resident_over_max_count(self):
+        """
+        Test that you cannot add residents when they're over their max count
+        """
+        game = GameTestHelper.create_game(
+            owner=User.objects.create(username='user')
+        )
+
+        game.add_resident(Roles.SEER)
+        with self.assertRaises(APIException) as error:
+            game.add_resident(Roles.SEER)
+
+        self.assertEquals(
+            error.exception.code,
+            APIExceptionCode.GAME_MAX_RESIDENT_FOR_ROLE_REACHED
+        )
+
     def test_start_allocate_player_position(self):
         """
         Test that player positions will be allocated and deduped on game start
@@ -265,16 +301,8 @@ class GameTest(TestCase):
         """
         Test that players will be allocated to teams depending on game size
         """
-        players = []
-
-        for i in range(Game.MAX_PLAYERS):
-            players.append(User.objects.create(username='user%d' % i))
-
         for size in range(Game.MIN_PLAYERS, Game.MAX_PLAYERS):
-            game = GameTestHelper.create_game(
-                owner=players[0],
-                players=players[1:size]
-            )
+            game = GameTestHelper.create_start_ready_game(num_players=size)
             game.start()
 
             team_counts = {}
@@ -288,6 +316,20 @@ class GameTest(TestCase):
 
             expected_team_counts = Game.get_team_allocation(player_count)
             self.assertEquals(team_counts, expected_team_counts)
+
+    def test_start_allocate_hut_positions(self):
+        """
+        Test that positions get allocated randomly on game start
+        """
+        game = GameTestHelper.create_start_ready_game()
+        for hut in game.huts.all():
+            self.assertEquals(hut.position, 0)
+
+        game.start()
+        self.assertCountEqual(
+            [r.position for r in game.huts.all()],
+            list(range(1, Game.RESIDENT_COUNT + 1))
+        )
 
     def test_start_active_turn(self):
         """
