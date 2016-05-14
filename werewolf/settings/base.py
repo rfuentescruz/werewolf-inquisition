@@ -82,12 +82,14 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'werewolf',
-        'USER': 'root',
+        'USER': 'werewolf',
     }
 }
 
 if 'test' in sys.argv:
-    DATABASES['default'] = {'ENGINE': 'django.db.backends.sqlite3'}
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.sqlite3',
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/1.9/ref/settings/#auth-password-validators
