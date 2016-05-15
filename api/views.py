@@ -1,13 +1,13 @@
 from django.http import Http404
 
-from rest_framework import status, viewsets
+from rest_framework import generics, status, viewsets
 from rest_framework.decorators import detail_route
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from .models import Game, Player, Teams
-from .permissions import IsGameParticipant
-from .serializers import GameSerializer, PlayerSerializer
+from .models import Game, Player, Resident, Roles, Teams
+from .permissions import IsGameParticipant, IsGameOwnerOrReadOnly
+from .serializers import GameSerializer, PlayerSerializer, ResidentSerializer
 
 
 class GameViewSet(viewsets.ModelViewSet):
@@ -120,3 +120,58 @@ class PlayerViewSet(viewsets.ModelViewSet):
         player.leave_game()
 
         return Response(None)
+
+
+class ResidentViewSet(viewsets.ViewSetMixin,
+                      generics.ListCreateAPIView,
+                      generics.RetrieveDestroyAPIView):
+    permission_classes = (
+        IsAuthenticated, IsGameParticipant, IsGameOwnerOrReadOnly
+    )
+    serializer_class = ResidentSerializer
+
+    def get_queryset(self):
+        game = self.get_game()
+        return Resident.objects.filter(game=game)
+
+    def get_game(self):
+        try:
+            return Game.objects.get(pk=self.kwargs['game_id'])
+        except Game.DoesNotExist:
+            raise Http404
+
+    def create(self, request, game_id):
+        game = self.get_game()
+
+        if game.has_started() or game.has_ended():
+            return Response(
+                'Residents may not be modified after the game has started',
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            role = Roles(request.data['role'])
+        except ValueError:
+            return Response(
+                'Invalid role provided "%s". Must be one of: %s' % (
+                    request.data['role'], [r.value for r in Roles]
+                ),
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        resident = game.add_resident(role)
+
+        serializer = self.get_serializer(resident)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def destroy(self, request, game_id, pk):
+        resident = self.get_object()
+
+        if resident.game.has_started() or resident.game.has_ended():
+            return Response(
+                'Residents may not be modified after the game has started',
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        resident.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

@@ -84,12 +84,12 @@ class PlayerSerializer(DynamicFieldsModelSerializer):
 
 
 class ResidentSerializer(serializers.ModelSerializer):
-    role = RoleSerializer()
+    role = serializers.ReadOnlyField(source='role.role')
 
     class Meta:
         model = Resident
-        fields = ('id', 'role', )
-        depth = 2
+        fields = ('id', 'role', 'time_eliminated', )
+        depth = 1
 
 
 class HutSerializer(DynamicFieldsModelSerializer):
