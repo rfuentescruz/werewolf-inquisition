@@ -5,9 +5,11 @@ from rest_framework.decorators import detail_route
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from .models import Game, Player, Resident, Roles, Teams
+from .models import Game, Player, Resident, Roles, Teams, Turn
 from .permissions import IsGameParticipant, IsGameOwnerOrReadOnly
-from .serializers import GameSerializer, PlayerSerializer, ResidentSerializer
+from .serializers import (
+    GameSerializer, PlayerSerializer, ResidentSerializer, TurnSerializer
+)
 
 
 class GameViewSet(viewsets.ModelViewSet):
@@ -175,3 +177,24 @@ class ResidentViewSet(viewsets.ViewSetMixin,
 
         resident.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class TurnViewSet(viewsets.ViewSetMixin,
+                  generics.ListAPIView,
+                  generics.RetrieveAPIView):
+
+    permission_classes = (
+        IsAuthenticated, IsGameParticipant, IsGameOwnerOrReadOnly
+    )
+
+    serializer_class = TurnSerializer
+
+    def get_queryset(self):
+        game = self.get_game()
+        return Turn.objects.filter(game=game)
+
+    def get_game(self):
+        try:
+            return Game.objects.get(pk=self.kwargs['game_id'])
+        except Game.DoesNotExist:
+            raise Http404

@@ -14,5 +14,10 @@ router.register(
     viewset=views.ResidentViewSet,
     base_name='residents'
 )
+router.register(
+    prefix=r'games/(?P<game_id>[0-9]+)/turns',
+    viewset=views.TurnViewSet,
+    base_name='turns'
+)
 
 urlpatterns = router.urls
