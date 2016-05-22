@@ -15,6 +15,8 @@ class APIExceptionCode(Enum):
     PLAYER_ALREADY_JOINED = 2000
     PLAYER_ALREADY_LEFT = 2001
 
+    TURN_ALREADY_ENDED = 3000
+
 
 class APIException(RestAPIException):
     def __init__(self, message, code, http_code=None):

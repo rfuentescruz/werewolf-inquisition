@@ -1,8 +1,12 @@
 from django.db import models
 
+from rest_framework import status
+
 from .game import Game
 from .phase import Phases
 from .player import Player
+
+from ..exceptions import APIException, APIExceptionCode
 
 
 class Turn(models.Model):
@@ -28,6 +32,13 @@ class Turn(models.Model):
     time_created = models.DateTimeField(auto_now_add=True)
 
     def end(self):
+        if not self.is_active:
+            raise APIException(
+                'Cannot end a turn that has already ended',
+                APIExceptionCode.TURN_ALREADY_ENDED,
+                http_code=status.HTTP_400_BAD_REQUEST
+            )
+
         grand_inquisitor = self.game.get_next_player(self.grand_inquisitor)
 
         self.is_active = False
