@@ -7,7 +7,10 @@ class GameTestHelper(object):
     user_id = 0
 
     @classmethod
-    def create_game(cls, owner, players=None):
+    def create_game(cls, owner=None, players=None):
+        if not owner:
+            owner = cls.create_user() 
+
         game = Game.objects.create()
         game.players.create(
             user=owner,
@@ -33,10 +36,7 @@ class GameTestHelper(object):
         users = []
 
         for i in range(num_players):
-            users.append(
-                User.objects.create(username='user_%d' % cls.user_id)
-            )
-            cls.user_id += 1
+            users.append(cls.create_user())
 
         game = cls.create_game(owner=users[0], players=users[1:])
 
@@ -44,3 +44,10 @@ class GameTestHelper(object):
             game.add_resident(Roles.VILLAGER)
 
         return game
+
+    @classmethod
+    def create_user(cls, prefix='user'):
+        user = User.objects.create(username='%s_%s' % (prefix, cls.user_id))
+        cls.user_id += 1
+        return user
+
