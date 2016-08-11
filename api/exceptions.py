@@ -18,6 +18,7 @@ class APIExceptionCode(Enum):
     TURN_ALREADY_ENDED = 3000
 
     ACTION_INVALID_ACTOR = 4000
+    ACTION_INVALID_TARGET = 4001
 
 
 class APIException(RestAPIException):
