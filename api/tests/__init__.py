@@ -9,7 +9,7 @@ class GameTestHelper(object):
     @classmethod
     def create_game(cls, owner=None, players=None):
         if not owner:
-            owner = cls.create_user() 
+            owner = cls.create_user()
 
         game = Game.objects.create()
         game.players.create(
@@ -50,4 +50,3 @@ class GameTestHelper(object):
         user = User.objects.create(username='%s_%s' % (prefix, cls.user_id))
         cls.user_id += 1
         return user
-

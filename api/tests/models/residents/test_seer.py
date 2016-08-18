@@ -3,7 +3,7 @@ from django.test import TestCase
 
 from ... import GameTestHelper
 from ....exceptions import APIException, APIExceptionCode
-from ....models import Action, ActionTarget, Roles
+from ....models import Roles
 from ....models.residents import Seer
 
 
@@ -100,4 +100,3 @@ class SeerTest(TestCase):
         self.assertEquals(
             ex.exception.code, APIExceptionCode.ACTION_INVALID_ACTOR
         )
-

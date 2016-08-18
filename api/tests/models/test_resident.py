@@ -26,4 +26,3 @@ class ResidentTest(TestCase):
             ex.exception.code,
             APIExceptionCode.ACTION_INVALID_ACTOR
         )
-

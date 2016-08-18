@@ -25,4 +25,3 @@ class ActionTarget(models.Model):
         default=None,
         related_name='+'
     )
-

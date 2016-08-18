@@ -3,6 +3,7 @@ from rest_framework import status
 from ...exceptions import APIException, APIExceptionCode
 from ...models import Resident, Roles
 
+
 class Seer(Resident):
     class Meta:
         proxy = True
@@ -34,4 +35,3 @@ class Seer(Resident):
         target_hut.save()
 
         return target_hut.resident
-
