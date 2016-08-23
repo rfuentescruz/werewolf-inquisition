@@ -3,6 +3,7 @@ __pycache__
 
 *.egg-info
 
+.tox
 .coverage
 
 werewolf/settings/local.py

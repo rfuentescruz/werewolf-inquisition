@@ -7,3 +7,5 @@ nosexcover
 mock
 
 flake8
+
+tox
