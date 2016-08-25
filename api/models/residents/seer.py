@@ -8,8 +8,8 @@ class Seer(Resident):
     class Meta:
         proxy = True
 
-    def action(self, player, target_hut):
-        super(self.__class__, self).action()
+    def use_action(self, player, target_hut):
+        super(self.__class__, self).use_action(player=player)
 
         if self.role.role != Roles.SEER.value:
             raise APIException(
@@ -25,11 +25,7 @@ class Seer(Resident):
                 http_code=status.HTTP_400_BAD_REQUEST
             )
 
-        action = self.game.active_turn.actions.create(
-            player=player, resident=self
-        )
-
-        action.targets.create(hut=target_hut)
+        self.action.targets.create(hut=target_hut)
 
         target_hut.is_visited = True
         target_hut.save()

@@ -19,6 +19,8 @@ class APIExceptionCode(Enum):
 
     ACTION_INVALID_ACTOR = 4000
     ACTION_INVALID_TARGET = 4001
+    ACTION_ALREADY_USED = 4002
+    ACTION_ACTOR_MULTIPLE_ACTION = 4003
 
 
 class APIException(RestAPIException):
