@@ -25,7 +25,7 @@ class GameTestHelper(object):
         return game
 
     @classmethod
-    def create_start_ready_game(cls, num_players=Game.MIN_PLAYERS):
+    def create_start_ready_game(cls, num_players=Game.MIN_PLAYERS, roles=None):
         if not Game.MIN_PLAYERS <= num_players <= Game.MAX_PLAYERS:
             raise ValueError(
                 'num_players must be between %d and %d. Currently %d' % (
@@ -40,8 +40,10 @@ class GameTestHelper(object):
 
         game = cls.create_game(owner=users[0], players=users[1:])
 
-        for i in range(Game.RESIDENT_COUNT):
-            game.add_resident(Roles.VILLAGER)
+        chosen_roles = [i for i in roles] if roles else []
+        chosen_roles += [Roles.VILLAGER] * (Game.RESIDENT_COUNT - len(chosen_roles))
+        for role in chosen_roles:
+            game.add_resident(role)
 
         return game
 

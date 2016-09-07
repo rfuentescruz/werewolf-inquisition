@@ -13,10 +13,8 @@ class SeerTest(TestCase):
         Test that the Seer action will return the resident of the target hut
         """
 
-        game = GameTestHelper.create_start_ready_game()
+        game = GameTestHelper.create_start_ready_game(roles=[Roles.SEER])
         game.start()
-
-        game.add_resident(Roles.SEER)
 
         seer = Seer.objects.filter(
             game=game, role__role=Roles.SEER.value
@@ -34,10 +32,8 @@ class SeerTest(TestCase):
         Test that the Seer action will mark the target hut as visited
         """
 
-        game = GameTestHelper.create_start_ready_game()
+        game = GameTestHelper.create_start_ready_game(roles=[Roles.SEER])
         game.start()
-
-        game.add_resident(Roles.SEER)
 
         seer = Seer.objects.filter(
             game=game, role__role=Roles.SEER.value
@@ -55,10 +51,8 @@ class SeerTest(TestCase):
         Test that the Seer action can only target unvisited huts
         """
 
-        game = GameTestHelper.create_start_ready_game()
+        game = GameTestHelper.create_start_ready_game(roles=[Roles.SEER])
         game.start()
-
-        game.add_resident(Roles.SEER)
 
         seer = Seer.objects.filter(
             game=game, role__role=Roles.SEER.value
@@ -81,10 +75,8 @@ class SeerTest(TestCase):
         Test that Seer models with invalid roles can't perform the Seer action
         """
 
-        game = GameTestHelper.create_start_ready_game()
+        game = GameTestHelper.create_start_ready_game(roles=[Roles.SEER])
         game.start()
-
-        game.add_resident(Roles.SEER)
 
         seer = Seer.objects.filter(
             game=game, role__role=Roles.VILLAGER.value
