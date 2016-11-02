@@ -24,7 +24,7 @@ class SeerTest(TestCase):
             role__role=Roles.VILLAGER.value
         ).first()
 
-        resident = seer.use_action(player=game.owner, target_hut=villager.hut)
+        resident = seer.use_action(player=game.owner, targets=[villager.hut])
         self.assertEquals(villager, resident)
 
     def test_action_mark_hut_as_visited(self):
@@ -43,7 +43,7 @@ class SeerTest(TestCase):
             role__role=Roles.VILLAGER.value
         ).first()
 
-        seer.use_action(player=game.owner, target_hut=villager.hut)
+        seer.use_action(player=game.owner, targets=[villager.hut])
         self.assertTrue(villager.hut.is_visited)
 
     def test_action_already_visited_target(self):
@@ -64,7 +64,7 @@ class SeerTest(TestCase):
         villager.hut.is_visited = True
 
         with self.assertRaises(APIException) as ex:
-            seer.use_action(player=game.owner, target_hut=villager.hut)
+            seer.use_action(player=game.owner, targets=[villager.hut])
 
         self.assertEquals(
             ex.exception.code, APIExceptionCode.ACTION_INVALID_TARGET
@@ -87,7 +87,7 @@ class SeerTest(TestCase):
         ).first()
 
         with self.assertRaises(APIException) as ex:
-            seer.use_action(player=game.owner, target_hut=villager.hut)
+            seer.use_action(player=game.owner, targets=[villager.hut])
 
         self.assertEquals(
             ex.exception.code, APIExceptionCode.ACTION_INVALID_ACTOR

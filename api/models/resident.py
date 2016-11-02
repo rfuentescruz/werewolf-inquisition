@@ -19,7 +19,7 @@ class Resident(models.Model):
 
     action = None
 
-    def use_action(self, player, *args, **kwargs):
+    def use_action(self, player, targets=None, *args, **kwargs):
         if bool(self.time_eliminated):
             raise APIException(
                 'Eliminated roles cannot perform any further actions',
