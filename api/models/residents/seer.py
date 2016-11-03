@@ -27,6 +27,13 @@ class Seer(Resident):
 
         target_hut = targets[0]
 
+        if target_hut.game != self.game:
+            raise APIException(
+                'Seers can only target huts of the current game!',
+                APIExceptionCode.ACTION_INVALID_TARGET,
+                http_code=status.HTTP_400_BAD_REQUEST
+            )
+
         if target_hut.is_visited:
             raise APIException(
                 'Seers can only target visited huts',

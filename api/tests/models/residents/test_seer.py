@@ -46,6 +46,30 @@ class SeerTest(TestCase):
         seer.use_action(player=game.owner, targets=[villager.hut])
         self.assertTrue(villager.hut.is_visited)
 
+    def test_action_invalid_hut(self):
+        """
+        Test that the Seer action will throw errors if given an invalid hut
+        """
+        game = GameTestHelper.create_start_ready_game(roles=[Roles.SEER])
+        game.start()
+
+        seer = Seer.objects.filter(
+            game=game, role__role=Roles.SEER.value
+        ).first()
+
+        other_game = GameTestHelper.create_start_ready_game(roles=[Roles.SEER])
+        other_game.start()
+
+        with self.assertRaises(APIException) as ex:
+            seer.use_action(
+                player=game.owner,
+                targets=[other_game.huts.first()]
+            )
+
+        self.assertEquals(
+            ex.exception.code, APIExceptionCode.ACTION_INVALID_TARGET
+        )
+
     def test_action_already_visited_target(self):
         """
         Test that the Seer action can only target unvisited huts
