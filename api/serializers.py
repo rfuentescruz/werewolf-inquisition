@@ -83,7 +83,7 @@ class PlayerSerializer(DynamicFieldsModelSerializer):
         ]
 
 
-class ResidentSerializer(serializers.ModelSerializer):
+class ResidentSerializer(DynamicFieldsModelSerializer):
     role = serializers.ReadOnlyField(source='role.role')
 
     class Meta:
@@ -95,8 +95,8 @@ class ResidentSerializer(serializers.ModelSerializer):
 class HutSerializer(DynamicFieldsModelSerializer):
     class Meta:
         model = Hut
-        fields = ('position', 'time_eliminated', 'resident', 'votes')
-        read_only_fields = ('position', 'time_eliminated', 'resident', 'votes')
+        fields = ('id', 'position', 'time_eliminated', 'resident', 'votes')
+        read_only_fields = ('id', 'position', 'time_eliminated', 'resident', 'votes')
 
 
 class GameSerializer(DynamicFieldsModelSerializer):
