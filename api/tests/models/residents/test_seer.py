@@ -70,6 +70,42 @@ class SeerTest(TestCase):
             ex.exception.code, APIExceptionCode.ACTION_INVALID_TARGET
         )
 
+    def test_action_multiple_huts(self):
+        """
+        Test that the Seer action must target exactly one hut
+        """
+        game = GameTestHelper.create_start_ready_game(roles=[Roles.SEER])
+        game.start()
+
+        seer = Seer.objects.filter(
+            game=game, role__role=Roles.SEER.value
+        ).first()
+
+        with self.assertRaises(APIException) as ex:
+            seer.use_action(player=game.owner, targets=game.huts.all())
+
+        self.assertEquals(
+            ex.exception.code, APIExceptionCode.ACTION_INVALID_TARGET
+        )
+
+    def test_action_target_non_hut(self):
+        """
+        Test that the Seer action must target a hut
+        """
+        game = GameTestHelper.create_start_ready_game(roles=[Roles.SEER])
+        game.start()
+
+        seer = Seer.objects.filter(
+            game=game, role__role=Roles.SEER.value
+        ).first()
+
+        with self.assertRaises(APIException) as ex:
+            seer.use_action(player=game.owner, targets=[game.owner])
+
+        self.assertEquals(
+            ex.exception.code, APIExceptionCode.ACTION_INVALID_TARGET
+        )
+
     def test_action_already_visited_target(self):
         """
         Test that the Seer action can only target unvisited huts
