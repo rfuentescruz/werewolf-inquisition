@@ -1,7 +1,7 @@
 from rest_framework import status
 
 from ...exceptions import APIException, APIExceptionCode
-from ...models import Hut, Resident, Roles, Vote
+from ...models import Hut, Resident
 
 
 class Villager(Resident):
@@ -22,4 +22,3 @@ class Villager(Resident):
 
         player.votes.create(turn=self.game.active_turn)
         player.votes.create(turn=self.game.active_turn, hut=target_hut)
-

@@ -96,7 +96,9 @@ class HutSerializer(DynamicFieldsModelSerializer):
     class Meta:
         model = Hut
         fields = ('id', 'position', 'time_eliminated', 'resident', 'votes')
-        read_only_fields = ('id', 'position', 'time_eliminated', 'resident', 'votes')
+        read_only_fields = (
+            'id', 'position', 'time_eliminated', 'resident', 'votes'
+        )
 
 
 class GameSerializer(DynamicFieldsModelSerializer):

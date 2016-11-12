@@ -41,7 +41,8 @@ class GameTestHelper(object):
         game = cls.create_game(owner=users[0], players=users[1:])
 
         chosen_roles = [i for i in roles] if roles else []
-        chosen_roles += [Roles.VILLAGER] * (Game.RESIDENT_COUNT - len(chosen_roles))
+        fill_role_count = Game.RESIDENT_COUNT - len(chosen_roles)
+        chosen_roles += [Roles.VILLAGER] * fill_role_count
         for role in chosen_roles:
             game.add_resident(role)
 

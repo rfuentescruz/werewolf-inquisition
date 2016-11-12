@@ -3,7 +3,7 @@ from django.test import TestCase
 from ... import GameTestHelper
 from ....exceptions import APIException, APIExceptionCode
 from ....models import Roles
-from ....models.residents import Seer, Villager
+from ....models.residents import Villager
 
 
 class VillagerTest(TestCase):
