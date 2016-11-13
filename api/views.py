@@ -5,7 +5,7 @@ from rest_framework.decorators import detail_route
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from .models import Game, Player, Resident, Roles, Teams, Turn
+from . import models
 from .permissions import IsGameParticipant, IsGameOwnerOrReadOnly
 from .serializers import (
     GameSerializer, PlayerSerializer, ResidentSerializer, TurnSerializer
@@ -15,15 +15,15 @@ from .serializers import (
 class GameViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated, )
     serializer_class = GameSerializer
-    queryset = Game.objects.all()
+    queryset = models.Game.objects.all()
 
     def create(self, request):
-        game = Game.objects.create()
+        game = models.Game.objects.create()
         game.players.create(
             user=request.user,
             position=1,
             is_owner=True,
-            team=Teams.VILLAGER.value
+            team=models.Teams.VILLAGER.value
         )
 
         serializer = self.get_serializer(game)
@@ -43,7 +43,7 @@ class GameViewSet(viewsets.ModelViewSet):
 
         try:
             player = game.get_player(username=request.user.username)
-        except Player.DoesNotExist:
+        except models.Player.DoesNotExist:
             return Response(
                 'You are not a participant of the game',
                 status=status.HTTP_400_BAD_REQUEST
@@ -95,12 +95,12 @@ class PlayerViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         game = self.get_game()
-        return Player.objects.filter(game=game)
+        return models.Player.objects.filter(game=game)
 
     def get_game(self):
         try:
-            return Game.objects.get(pk=self.kwargs['game_id'])
-        except Game.DoesNotExist:
+            return models.Game.objects.get(pk=self.kwargs['game_id'])
+        except models.Game.DoesNotExist:
             raise Http404
 
     def create(self, request, game_id):
@@ -134,12 +134,12 @@ class ResidentViewSet(viewsets.ViewSetMixin,
 
     def get_queryset(self):
         game = self.get_game()
-        return Resident.objects.filter(game=game)
+        return models.Resident.objects.filter(game=game)
 
     def get_game(self):
         try:
-            return Game.objects.get(pk=self.kwargs['game_id'])
-        except Game.DoesNotExist:
+            return models.Game.objects.get(pk=self.kwargs['game_id'])
+        except models.Game.DoesNotExist:
             raise Http404
 
     def create(self, request, game_id):
@@ -152,11 +152,11 @@ class ResidentViewSet(viewsets.ViewSetMixin,
             )
 
         try:
-            role = Roles(request.data['role'])
+            role = models.Roles(request.data['role'])
         except ValueError:
             return Response(
                 'Invalid role provided "%s". Must be one of: %s' % (
-                    request.data['role'], [r.value for r in Roles]
+                    request.data['role'], [r.value for r in models.Roles]
                 ),
                 status=status.HTTP_400_BAD_REQUEST
             )
@@ -191,10 +191,10 @@ class TurnViewSet(viewsets.ViewSetMixin,
 
     def get_queryset(self):
         game = self.get_game()
-        return Turn.objects.filter(game=game)
+        return models.Turn.objects.filter(game=game)
 
     def get_game(self):
         try:
-            return Game.objects.get(pk=self.kwargs['game_id'])
-        except Game.DoesNotExist:
+            return models.Game.objects.get(pk=self.kwargs['game_id'])
+        except models.Game.DoesNotExist:
             raise Http404
