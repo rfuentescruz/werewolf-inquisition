@@ -1,14 +1,17 @@
 from django.http import Http404
+from django.shortcuts import get_object_or_404
 
-from rest_framework import generics, status, viewsets
-from rest_framework.decorators import detail_route
+from rest_framework import decorators
+from rest_framework import generics, mixins, status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from . import models
 from .permissions import IsGameParticipant, IsGameOwnerOrReadOnly
 from .serializers import (
-    GameSerializer, PlayerSerializer, ResidentSerializer, TurnSerializer
+    ActionSerializer, GameSerializer, PlayerSerializer, ResidentSerializer,
+    TurnSerializer
 )
 
 
@@ -29,7 +32,7 @@ class GameViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(game)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @detail_route(methods=['POST'])
+    @decorators.detail_route(methods=['POST'])
     def join(self, request, pk):
         game = self.get_object()
         game.join(request.user)
@@ -37,7 +40,7 @@ class GameViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(game)
         return Response(serializer.data)
 
-    @detail_route(methods=['POST'])
+    @decorators.detail_route(methods=['POST'])
     def leave(self, request, pk):
         game = self.get_object()
 
@@ -53,7 +56,7 @@ class GameViewSet(viewsets.ModelViewSet):
 
         return Response(None)
 
-    @detail_route(methods=['POST'])
+    @decorators.detail_route(methods=['POST'])
     def start(self, request, pk):
         game = self.get_object()
 
@@ -90,7 +93,7 @@ class GameViewSet(viewsets.ModelViewSet):
 
 
 class PlayerViewSet(viewsets.ModelViewSet):
-    permission_classes = (IsAuthenticated, IsGameParticipant, )
+    permission_classes = (IsAuthenticated, )
     serializer_class = PlayerSerializer
 
     def get_queryset(self):
@@ -103,6 +106,7 @@ class PlayerViewSet(viewsets.ModelViewSet):
         except models.Game.DoesNotExist:
             raise Http404
 
+    @decorators.permission_classes((IsGameParticipant, ))
     def create(self, request, game_id):
         game = self.get_game()
         player = game.join(request.user)
@@ -198,3 +202,62 @@ class TurnViewSet(viewsets.ViewSetMixin,
             return models.Game.objects.get(pk=self.kwargs['game_id'])
         except models.Game.DoesNotExist:
             raise Http404
+
+
+class ActionAPIView(APIView):
+    permission_classes = (IsAuthenticated, IsGameParticipant,)
+
+    def resident_action(role):
+        def decorator(func):
+            def inner(self, request, *args, **kwargs):
+                cls = models.Resident.get_subclass_for_role(role)
+                kwargs['resident'] = cls.objects.get(
+                    pk=request.data['resident'], role__role=role.value
+                )
+                return func(self, request, *args, **kwargs)
+            return inner
+        return decorator
+
+    def post(self, request, game_id, role):
+        game = get_object_or_404(models.Game, pk=game_id)
+
+        if not game.has_started():
+            return Response(
+                'Game has not yet started',
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        role = models.Roles(role)
+        resident = get_object_or_404(
+            models.Resident.get_subclass_for_role(role),
+            pk=request.data['resident'],
+            role__role=role.value
+        )
+
+        handler = getattr(self, '_action_%s' % role.value, None)
+
+        if not handler:
+            raise Http404
+
+        return handler(request, game, resident)
+
+    def _action_villager(self, request, game, resident):
+        target_hut = get_object_or_404(game.huts, id=request.data['hut'])
+
+        resident.use_action(
+            player=game.get_player(request.user.username),
+            targets=[target_hut]
+        )
+
+        return Response('')
+
+    def _action_seer(self, request, game, resident):
+        target_hut = get_object_or_404(game.huts, id=request.data['hut'])
+
+        resident.use_action(
+            player=game.get_player(request.user.username),
+            targets=[target_hut]
+        )
+
+        serializer = ResidentSerializer(target_hut.resident)
+        return Response(serializer.data)

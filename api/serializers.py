@@ -1,4 +1,7 @@
-from .models import Game, Hut, Phases, Player, Resident, Role, Teams, Turn
+from .models import (
+    Action, ActionTarget, Game, Hut, Phases, Player, Resident, Role, Teams,
+    Turn
+)
 
 from rest_framework import serializers
 from rest_framework.fields import SkipField
@@ -161,3 +164,30 @@ class TurnSerializer(DynamicFieldsModelSerializer):
 
     def get_current_phase(self, obj):
         return Phases(obj.current_phase).name
+
+
+class ActionTargetSerializer(DynamicFieldsModelSerializer):
+    player = PlayerSerializer(
+        read_only=True, fields=('id', 'user', 'position')
+    )
+    hut = HutSerializer(fields=('id', 'position'))
+
+    class Meta:
+        model = ActionTarget
+        fields = ('id', 'player', 'hut')
+        read_only_fields = ('id', 'player')
+
+
+class ActionSerializer(DynamicFieldsModelSerializer):
+    turn = serializers.ReadOnlyField(source='turn.number')
+    player = PlayerSerializer(
+        read_only=True, fields=('id', 'user', 'position')
+    )
+    resident = ResidentSerializer(read_only=True)
+    targets = ActionTargetSerializer(many=True)
+
+
+    class Meta:
+        model = Action
+        fields = ('id', 'player', 'resident', 'targets', 'turn')
+        read_only_fields = ('id', 'player', 'resident', 'turn')

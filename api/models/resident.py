@@ -1,8 +1,9 @@
 from django.db import models
+from django.apps import apps
 from rest_framework import status
 
 from .game import Game
-from .role import Role
+from .role import Role, Roles
 
 from ..exceptions import APIException, APIExceptionCode
 
@@ -49,3 +50,12 @@ class Resident(models.Model):
         self.action = self.game.active_turn.actions.create(
             player=player, resident=self
         )
+
+    @classmethod
+    def get_subclass_for_role(cls, role):
+        if role == Roles.SEER:
+            return apps.get_model('api', 'Seer')
+        elif role == Roles.VILLAGER:
+            return apps.get_model('api', 'Villager')
+        else:
+            raise APIException('No Resident subclass for role: %s' % role.name)

@@ -71,3 +71,25 @@ class ResidentTest(TestCase):
             ex.exception.code,
             APIExceptionCode.ACTION_ALREADY_USED
         )
+
+    def test_action(self):
+        """
+        Test that actions get recorded for the current turn and player
+        """
+
+        game = GameTestHelper.create_start_ready_game()
+        game.start()
+
+        self.assertEquals(game.active_turn.actions.count(), 0)
+        self.assertEquals(game.owner.actions.count(), 0)
+
+        villager = game.residents.filter(
+            role__role=Roles.VILLAGER.value
+        ).first()
+        villager.use_action(player=game.owner)
+
+        self.assertEquals(game.active_turn.actions.count(), 1)
+        self.assertEquals(game.active_turn.actions.get(), villager.action)
+
+        self.assertEquals(game.owner.actions.count(), 1)
+        self.assertEquals(game.owner.actions.get(), villager.action)

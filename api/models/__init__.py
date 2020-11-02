@@ -13,8 +13,11 @@ from .role import Role, Roles
 from .resident import Resident
 from .hut import Hut
 
+from . import residents
+
 __all__ = [
     Teams, Phases,
     Game, Player, Turn, Action, ActionTarget, Vote, Inquisition,
     Role, Roles, Resident, Hut,
+    residents,
 ]

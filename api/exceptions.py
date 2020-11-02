@@ -22,6 +22,8 @@ class APIExceptionCode(Enum):
     ACTION_ALREADY_USED = 4002
     ACTION_ACTOR_MULTIPLE_ACTION = 4003
 
+    VIEW_MISSING_GAME_ID = 9001
+
 
 class APIException(RestAPIException):
     def __init__(self, message, code, http_code=None):

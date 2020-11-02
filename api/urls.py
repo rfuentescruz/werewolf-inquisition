@@ -1,3 +1,4 @@
+from django.conf.urls import url
 from rest_framework import routers
 
 from . import views
@@ -20,4 +21,11 @@ router.register(
     base_name='turns'
 )
 
-urlpatterns = router.urls
+urlpatterns = [
+    url(
+        r'games/(?P<game_id>[0-9]+)/actions/(?P<role>.*)/',
+        views.ActionAPIView.as_view()
+    )
+]
+
+urlpatterns += router.urls

@@ -5,6 +5,7 @@ __pycache__
 
 .tox
 .coverage
+htmlcov
 
 werewolf/settings/local.py
 
